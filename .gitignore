@@ -1,0 +1,11 @@
+# ── Private dev docs & personal notes ──
+resources/
+
+# ── OS junk ──
+.DS_Store
+Thumbs.db
+
+# ── Editor artifacts ──
+.vscode/
+*.suo
+*.user

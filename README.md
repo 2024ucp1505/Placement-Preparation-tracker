@@ -306,6 +306,176 @@ http://localhost:3000
 
 ---
 
+## 🌐 Deployment Guide
+
+> **Important:** GitHub Pages only hosts **static files** — it cannot run Node.js.
+> The live demo link above serves the old static version.
+> To deploy the full Express backend, use one of the platforms below.
+
+---
+
+### Deployment Options at a Glance
+
+| Platform | Supports Node.js | Free Tier | Custom Domain | Best For |
+|----------|-----------------|-----------|---------------|----------|
+| **GitHub Pages** | ❌ Static only | ✅ Always free | ✅ | Frontend-only demo |
+| **Railway** | ✅ | ✅ $5 credit/mo | ✅ | Full-stack, easiest setup |
+| **Render** | ✅ | ✅ Free tier | ✅ | Full-stack, spins down on idle |
+| **Heroku** | ✅ | ❌ Paid only | ✅ | Full-stack, mature platform |
+
+---
+
+### Deployment Flow
+
+```mermaid
+flowchart TD
+    Dev([Local Development\nnpm run dev]) --> Push[git push origin main]
+
+    Push --> GHP
+    Push --> Railway
+    Push --> Render
+
+    subgraph GHP [GitHub Pages — Static Only]
+        G1[Settings → Pages] --> G2[Source: main branch / root]
+        G2 --> G3([Serves public/ HTML+CSS+JS\nNo server. No API.])
+    end
+
+    subgraph Railway [Railway — Full Stack]
+        R1[Connect GitHub repo] --> R2[Auto-detect Node.js]
+        R2 --> R3[Set PORT env var] --> R4([npm start runs\nFull API + Frontend])
+    end
+
+    subgraph Render [Render — Full Stack]
+        N1[New Web Service] --> N2[Connect GitHub repo]
+        N2 --> N3[Build: npm install\nStart: npm start]
+        N3 --> N4([Deployed URL\nFull API + Frontend])
+    end
+```
+
+---
+
+### Option A — GitHub Pages *(Current — Static Frontend Only)*
+
+> ⚠️ GitHub Pages **cannot** run the Express server. It only serves the files in `public/`.
+> The API will **not work** on GitHub Pages — this option is suitable only as a static UI demo.
+
+**Steps:**
+
+1. Go to your repository on GitHub
+2. Click **Settings → Pages**
+3. Under **Source**, select branch `main` and folder `/ (root)` or `/public`
+4. Click **Save**
+5. Your site is live at:
+   ```
+   https://rishikajain123-tech.github.io/Placement-Preparation-tracker/
+   ```
+
+**What works:** The UI renders.  
+**What doesn't:** All `fetch()` API calls fail — no data will be saved or loaded.
+
+---
+
+### Option B — Railway *(Recommended — Full Stack)*
+
+Railway auto-detects Node.js and deploys with zero config.
+
+**Steps:**
+
+1. Sign up at [railway.app](https://railway.app) (free tier available)
+
+2. Click **New Project → Deploy from GitHub repo**
+
+3. Select `Placement-Preparation-tracker`
+
+4. Railway auto-detects `package.json` and runs `npm start`
+
+5. Add the environment variable:
+   ```
+   PORT = 3000
+   ```
+   *(Railway injects its own `PORT` automatically — you can skip this)*
+
+6. Click **Deploy** — Railway gives you a public URL like:
+   ```
+   https://placement-tracker-production.up.railway.app
+   ```
+
+**Deployment flow:**
+```mermaid
+flowchart LR
+    A[git push origin main] --> B[Railway detects push]
+    B --> C[npm install]
+    C --> D[npm start → node server.js]
+    D --> E([Public URL live\nFull API + Frontend])
+```
+
+---
+
+### Option C — Render *(Free Tier — Spins Down on Idle)*
+
+**Steps:**
+
+1. Sign up at [render.com](https://render.com)
+
+2. Click **New → Web Service**
+
+3. Connect your GitHub account and select the repo
+
+4. Fill in the service settings:
+
+   | Field | Value |
+   |-------|-------|
+   | **Environment** | `Node` |
+   | **Build Command** | `npm install` |
+   | **Start Command** | `npm start` |
+   | **Instance Type** | Free |
+
+5. Under **Environment Variables**, add:
+   ```
+   PORT = 10000
+   ```
+   *(Render's free tier uses port 10000 internally — it maps to HTTPS automatically)*
+
+6. Click **Create Web Service** — your URL will be:
+   ```
+   https://placement-tracker.onrender.com
+   ```
+
+> ⚠️ **Note:** Render free tier spins down after 15 minutes of inactivity. The first request after idle takes ~30 seconds to wake up. Upgrade to a paid instance to avoid this.
+
+---
+
+### Environment Variables Reference
+
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `PORT` | No | `3000` | Port the server listens on |
+| `NODE_ENV` | No | `development` | Set to `production` on live servers |
+| `DB_URL` | Future | — | Database connection string (when added) |
+
+Create a `.env` file locally (never commit it — it's in `.gitignore`):
+```
+PORT=3000
+NODE_ENV=development
+```
+
+On Railway / Render, set these in the platform's **Environment Variables** dashboard instead of a `.env` file.
+
+---
+
+### Pre-Deployment Checklist
+
+```
+[ ] npm install runs without errors
+[ ] npm start launches the server without crashing
+[ ] GET http://localhost:3000/api/questions returns []
+[ ] PORT env variable is set on the platform
+[ ] node_modules/ is in .gitignore (never commit it)
+[ ] .env is in .gitignore (never commit secrets)
+```
+
+---
+
 ## 🗂️ Supported Data Values
 
 ### Companies

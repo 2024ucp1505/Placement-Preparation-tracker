@@ -13,7 +13,7 @@ A full-stack web application to help students organise and track their DSA place
 
 | | Link |
 |---|---|
-| 🟢 **Live App (Render — Full Stack)** | https://placement-preparation-tracker-tavq.onrender.com/ |
+| 🟢 **Live App (Render — Full Stack)** | https://placement-preparation-trackerr.onrender.com/|
 | 🔵 **Static Demo (GitHub Pages)** | https://rishikajain123-tech.github.io/Placement-Preparation-tracker/ |
 
 > ⚠️ The Render deployment runs the full Express server. GitHub Pages serves only the static UI without the API.

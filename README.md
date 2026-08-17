@@ -1,8 +1,22 @@
 # 🚀 Placement Preparation Tracker
 
+[![Node.js](https://img.shields.io/badge/Node.js-18%2B-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)](https://nodejs.org/)
+[![Express](https://img.shields.io/badge/Express-5.x-000000?style=for-the-badge&logo=express&logoColor=white)](https://expressjs.com/)
+[![JavaScript](https://img.shields.io/badge/JavaScript-ES6+-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
+[![HTML5](https://img.shields.io/badge/HTML5-Semantic-E34F26?style=for-the-badge&logo=html5&logoColor=white)](https://developer.mozilla.org/en-US/docs/Web/HTML)
+[![CSS3](https://img.shields.io/badge/CSS3-Custom%20Properties-1572B6?style=for-the-badge&logo=css3&logoColor=white)](https://developer.mozilla.org/en-US/docs/Web/CSS)
+[![Render](https://img.shields.io/badge/Deployed%20on-Render-46E3B7?style=for-the-badge&logo=render&logoColor=white)](https://placement-preparation-tracker-tavq.onrender.com/)
+[![License](https://img.shields.io/badge/License-ISC-blue?style=for-the-badge)](./package.json)
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/Rishikajain123-tech/Placement-Preparation-tracker)
+
 A full-stack web application to help students organise and track their DSA placement preparation efficiently. Built with **Node.js + Express** on the backend and **HTML, CSS, Vanilla JavaScript** on the frontend — following a clean **MVC architecture** with a RESTful API.
 
-> 🔗 **Live Demo (static version):** https://rishikajain123-tech.github.io/Placement-Preparation-tracker/
+| | Link |
+|---|---|
+| 🟢 **Live App (Render — Full Stack)** | https://placement-preparation-tracker-tavq.onrender.com/ |
+| 🔵 **Static Demo (GitHub Pages)** | https://rishikajain123-tech.github.io/Placement-Preparation-tracker/ |
+
+> ⚠️ The Render deployment runs the full Express server. GitHub Pages serves only the static UI without the API.
 
 ---
 
@@ -411,7 +425,9 @@ flowchart LR
 
 ---
 
-### Option C — Render *(Free Tier — Spins Down on Idle)*
+### Option C — Render ✅ *(Currently Deployed Here)*
+
+> 🟢 **This project is live at:** https://placement-preparation-tracker-tavq.onrender.com/
 
 **Steps:**
 
@@ -419,29 +435,41 @@ flowchart LR
 
 2. Click **New → Web Service**
 
-3. Connect your GitHub account and select the repo
+   > ⚠️ **Critical:** You MUST choose **Web Service**, NOT "Static Site".  
+   > A Static Site cannot run Node.js — Express will never start and all API calls will return 404.
+
+3. Connect your GitHub account and select `Placement-Preparation-tracker`
 
 4. Fill in the service settings:
 
    | Field | Value |
    |-------|-------|
-   | **Environment** | `Node` |
+   | **Language** | `Node` |
    | **Build Command** | `npm install` |
    | **Start Command** | `npm start` |
-   | **Instance Type** | Free |
+   | **Instance Type** | `Free` |
 
 5. Under **Environment Variables**, add:
-   ```
-   PORT = 10000
-   ```
-   *(Render's free tier uses port 10000 internally — it maps to HTTPS automatically)*
 
-6. Click **Create Web Service** — your URL will be:
+   | Key | Value |
+   |-----|-------|
+   | `PORT` | `10000` |
+   | `NODE_ENV` | `production` |
+
+   *(Render injects its own `PORT` automatically — the value above is a safe fallback)*
+
+6. Click **Create Web Service** — Render gives you a URL like:
    ```
-   https://placement-tracker.onrender.com
+   https://your-app-name.onrender.com
    ```
 
-> ⚠️ **Note:** Render free tier spins down after 15 minutes of inactivity. The first request after idle takes ~30 seconds to wake up. Upgrade to a paid instance to avoid this.
+7. **Verify the deployment is working:**
+   ```
+   # Should return [] (empty array, not a 404)
+   curl https://your-app-name.onrender.com/api/questions
+   ```
+
+> ⚠️ **Free tier note:** Render spins the service down after 15 minutes of inactivity. The first request after idle takes ~30 seconds to cold-start. Upgrade to a **Starter** instance ($7/mo) to keep it always-on.
 
 ---
 

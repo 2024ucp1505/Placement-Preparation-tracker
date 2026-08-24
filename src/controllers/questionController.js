@@ -15,14 +15,15 @@
 
 'use strict';
 
-const model = require('../models/questionModel');
+const mongoose = require('mongoose');
+const model    = require('../models/questionModel');
 
 
 /* ── GET /api/questions ──────────────────────────────────────
    Returns all questions, filtered by optional query params.
    Query params: search, company, topic, difficulty, status
    ──────────────────────────────────────────────────────────── */
-function getAllQuestions(req, res, next) {
+async function getAllQuestions(req, res, next) {
   try {
     const filters = {
       search:     req.query.search     || '',
@@ -32,7 +33,7 @@ function getAllQuestions(req, res, next) {
       status:     req.query.status     || '',
     };
 
-    const questions = model.getAll(filters);
+    const questions = await model.getAll(filters);
     res.status(200).json(questions);
   } catch (err) {
     next(err);
@@ -43,15 +44,15 @@ function getAllQuestions(req, res, next) {
 /* ── GET /api/questions/:id ──────────────────────────────────
    Returns a single question by numeric ID.
    ──────────────────────────────────────────────────────────── */
-function getQuestionById(req, res, next) {
+async function getQuestionById(req, res, next) {
   try {
-    const id = Number(req.params.id);
+    const { id } = req.params;
 
-    if (isNaN(id)) {
-      return res.status(400).json({ error: 'Invalid ID — must be a number.' });
+    if (!mongoose.isValidObjectId(id)) {
+      return res.status(400).json({ error: 'Invalid ID format.' });
     }
 
-    const question = model.getById(id);
+    const question = await model.getById(id);
 
     if (!question) {
       return res.status(404).json({ error: `Question with id ${id} not found.` });
@@ -68,20 +69,20 @@ function getQuestionById(req, res, next) {
    Creates a new question.
    Body is already validated and sanitised by the middleware.
    ──────────────────────────────────────────────────────────── */
-function createQuestion(req, res, next) {
+async function createQuestion(req, res, next) {
   try {
     const { company, topic, title, link, difficulty, status } = req.body;
 
     // Business rule: no duplicate company + title combinations
-    if (model.isDuplicate(company, title, null)) {
+    if (await model.isDuplicate(company, title, null)) {
       return res.status(409).json({
         error: `A question titled "${title}" for ${company} already exists.`,
       });
     }
 
-    const newQuestion = model.create({ company, topic, title, link, difficulty, status });
+    const newQuestion = await model.create({ company, topic, title, link, difficulty, status });
 
-    console.log(`✅ Created question [${newQuestion.id}]: "${newQuestion.title}" — ${newQuestion.company}`);
+    console.log(`✅ Created question [${newQuestion._id}]: "${newQuestion.title}" — ${newQuestion.company}`);
     res.status(201).json(newQuestion);
   } catch (err) {
     next(err);
@@ -93,24 +94,24 @@ function createQuestion(req, res, next) {
    Updates an existing question.
    Body is already validated and sanitised by the middleware.
    ──────────────────────────────────────────────────────────── */
-function updateQuestion(req, res, next) {
+async function updateQuestion(req, res, next) {
   try {
-    const id = Number(req.params.id);
+    const { id } = req.params;
 
-    if (isNaN(id)) {
-      return res.status(400).json({ error: 'Invalid ID — must be a number.' });
+    if (!mongoose.isValidObjectId(id)) {
+      return res.status(400).json({ error: 'Invalid ID format.' });
     }
 
     const { company, topic, title, link, difficulty, status } = req.body;
 
     // Duplicate check — exclude the question being updated
-    if (model.isDuplicate(company, title, id)) {
+    if (await model.isDuplicate(company, title, id)) {
       return res.status(409).json({
         error: `Another question titled "${title}" for ${company} already exists.`,
       });
     }
 
-    const updated = model.update(id, { company, topic, title, link, difficulty, status });
+    const updated = await model.update(id, { company, topic, title, link, difficulty, status });
 
     if (!updated) {
       return res.status(404).json({ error: `Question with id ${id} not found.` });
@@ -128,15 +129,15 @@ function updateQuestion(req, res, next) {
    Deletes a question by ID.
    Returns 204 No Content on success (no body).
    ──────────────────────────────────────────────────────────── */
-function deleteQuestion(req, res, next) {
+async function deleteQuestion(req, res, next) {
   try {
-    const id = Number(req.params.id);
+    const { id } = req.params;
 
-    if (isNaN(id)) {
-      return res.status(400).json({ error: 'Invalid ID — must be a number.' });
+    if (!mongoose.isValidObjectId(id)) {
+      return res.status(400).json({ error: 'Invalid ID format.' });
     }
 
-    const deleted = model.remove(id);
+    const deleted = await model.remove(id);
 
     if (!deleted) {
       return res.status(404).json({ error: `Question with id ${id} not found.` });

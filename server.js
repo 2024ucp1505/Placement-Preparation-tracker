@@ -2,19 +2,21 @@
    server.js — Entry Point
    Boots the Express application:
      1. Load config
-     2. Register middleware
-     3. Serve static frontend from /public
-     4. Mount REST API routes
-     5. Attach global error handler
-     6. Start listening
+     2. Connect to MongoDB (await — server only starts after DB is ready)
+     3. Register middleware
+     4. Serve static frontend from /public
+     5. Mount REST API routes
+     6. Attach global error handler
+     7. Start listening
    ============================================================ */
 
 'use strict';
 
-const express      = require('express');
-const cors         = require('cors');
-const path         = require('path');
-const config       = require('./src/config');
+const express        = require('express');
+const cors           = require('cors');
+const path           = require('path');
+const config         = require('./src/config');
+const connectDB      = require('./src/config/db');
 const questionRoutes = require('./src/routes/questionRoutes');
 const errorHandler   = require('./src/middleware/errorHandler');
 
@@ -45,11 +47,15 @@ app.use((req, res) => {
 /* ── Global Error Handler (must be last) ───────────────────── */
 app.use(errorHandler);
 
-/* ── Start Server ──────────────────────────────────────────── */
-app.listen(config.port, () => {
-  console.log(`\n🚀  Placement Tracker server running`);
-  console.log(`    Mode : ${config.nodeEnv}`);
-  console.log(`    URL  : http://localhost:${config.port}\n`);
-});
+/* ── Start Server (connect DB first, then listen) ──────────── */
+(async () => {
+  await connectDB();   // exits process on failure — no silent partial starts
+
+  app.listen(config.port, () => {
+    console.log(`\n🚀  Placement Tracker server running`);
+    console.log(`    Mode : ${config.nodeEnv}`);
+    console.log(`    URL  : http://localhost:${config.port}\n`);
+  });
+})();
 
 module.exports = app; // exported for future testing

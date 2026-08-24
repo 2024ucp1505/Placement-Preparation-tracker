@@ -197,13 +197,13 @@ function createTableRow(question) {
 
   // Wire Edit button
   row.querySelector('.btn--edit').addEventListener('click', function () {
-    const target = allQuestions.find(q => q.id === Number(this.dataset.id));
+    const target = allQuestions.find(q => String(q.id) === String(this.dataset.id));
     if (target) enterEditMode(target);
   });
 
   // Wire Delete button
   row.querySelector('.btn--delete').addEventListener('click', function () {
-    deleteQuestion(Number(this.dataset.id));
+    deleteQuestion(this.dataset.id);
   });
 
   return row;

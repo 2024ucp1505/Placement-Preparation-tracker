@@ -1,191 +1,222 @@
 /* ============================================================
    src/models/questionModel.js — Data Layer (Model)
 
-   This module is the ONLY place in the app that owns data.
-   Currently backed by an in-memory array.
+   Backed by MongoDB via Mongoose.
 
-   ┌──────────────────────────────────────────────────────────┐
-   │  TO SWAP IN A DATABASE                                   │
-   │  1. Install your DB driver (mongoose / pg / better-sqlite3) │
-   │  2. Replace the in-memory logic inside each function     │
-   │  3. Make each function async (controllers already await) │
-   │  4. No other file needs to change.                       │
-   └──────────────────────────────────────────────────────────┘
+   The public interface is IDENTICAL to the old in-memory version
+   (same 6 exported function names and signatures) so the
+   controller and routes do not need any logic changes.
 
-   Public interface (5 methods):
-     getAll(filters)    → Question[]
-     getById(id)        → Question | null
-     create(data)       → Question
-     update(id, data)   → Question | null
-     remove(id)         → boolean
+   Public interface:
+     getAll(filters)                    → Promise<Question[]>
+     getById(id)                        → Promise<Question | null>
+     create(data)                       → Promise<Question>
+     update(id, data)                   → Promise<Question | null>
+     remove(id)                         → Promise<boolean>
+     isDuplicate(company, title, excId) → Promise<boolean>
    ============================================================ */
 
 'use strict';
 
-/* ── In-Memory Store ──────────────────────────────────────────
-   TODO: Replace with a real DB connection when ready.
-   e.g.  const db = require('../config/db');
+const mongoose = require('mongoose');
+const { Schema } = mongoose;
+
+/* ── Allowed enum values — mirrors validateQuestion middleware ── */
+const VALID_COMPANIES    = ['Amazon', 'Google', 'Microsoft', 'Adobe', 'Flipkart', 'Walmart', 'Other'];
+const VALID_TOPICS       = ['Arrays', 'Strings', 'Linked List', 'Stack', 'Queue', 'Binary Search', 'Trees', 'Graphs', 'DP', 'Greedy', 'Backtracking', 'Heap', 'Other'];
+const VALID_DIFFICULTIES = ['Easy', 'Medium', 'Hard'];
+const VALID_STATUSES     = ['Solved', 'Unsolved'];
+
+
+/* ── Mongoose Schema ─────────────────────────────────────────
+   Describes the shape and rules for a question document.
+   Fields match the existing data shape exactly.
    ──────────────────────────────────────────────────────────── */
-let questions = [];
+const questionSchema = new Schema(
+  {
+    company: {
+      type:     String,
+      required: [true, 'Company is required.'],
+      enum:     { values: VALID_COMPANIES, message: 'Invalid company: {VALUE}.' },
+      trim:     true,
+    },
+    topic: {
+      type:     String,
+      required: [true, 'Topic is required.'],
+      enum:     { values: VALID_TOPICS, message: 'Invalid topic: {VALUE}.' },
+      trim:     true,
+    },
+    title: {
+      type:      String,
+      required:  [true, 'Question title is required.'],
+      minlength: [2, 'Title must be at least 2 characters.'],
+      trim:      true,
+    },
+    link: {
+      type:    String,
+      default: '',
+      trim:    true,
+    },
+    difficulty: {
+      type:     String,
+      required: [true, 'Difficulty is required.'],
+      enum:     { values: VALID_DIFFICULTIES, message: 'Invalid difficulty: {VALUE}.' },
+      trim:     true,
+    },
+    status: {
+      type:     String,
+      required: [true, 'Status is required.'],
+      enum:     { values: VALID_STATUSES, message: 'Invalid status: {VALUE}.' },
+      default:  'Unsolved',
+      trim:     true,
+    },
+  },
+  {
+    timestamps: true,   // adds createdAt and updatedAt automatically
+    versionKey: false,  // removes __v from documents
+    toJSON: { virtuals: true }, // Add id virtual field (string representation of _id)
+    toObject: { virtuals: true }
+  }
+);
 
+/* ── Compound index — speeds up isDuplicate lookups ─────────── */
+questionSchema.index({ company: 1, title: 1 });
 
-/* ── Question Schema ──────────────────────────────────────────
-   Every question object must conform to this shape:
-   {
-     id:         number   (timestamp, unique)
-     company:    string
-     topic:      string
-     title:      string
-     link:       string   (optional — may be empty string)
-     difficulty: "Easy" | "Medium" | "Hard"
-     status:     "Solved" | "Unsolved"
-   }
+/* ── Mongoose Model ──────────────────────────────────────────
+   'Question' → collection name becomes 'questions' in MongoDB.
    ──────────────────────────────────────────────────────────── */
+const Question = mongoose.model('Question', questionSchema);
 
+
+/* ── Helper: build a MongoDB query object from filter params ─ */
+function buildFilter(filters = {}) {
+  const query = {};
+
+  if (filters.company)    query.company    = filters.company;
+  if (filters.topic)      query.topic      = filters.topic;
+  if (filters.difficulty) query.difficulty = filters.difficulty;
+  if (filters.status)     query.status     = filters.status;
+
+  if (filters.search) {
+    const regex = new RegExp(filters.search, 'i');  // case-insensitive substring
+    query.$or = [
+      { title:   regex },
+      { company: regex },
+      { topic:   regex },
+    ];
+  }
+
+  return query;
+}
+
+
+/* ── Public Model Functions ──────────────────────────────────
+   All functions are async — MongoDB I/O is non-blocking.
+   ──────────────────────────────────────────────────────────── */
 
 /**
  * getAll — Return all questions, optionally filtered.
+ * Sorted newest-first (createdAt descending).
  *
  * @param {object} filters
- * @param {string} [filters.search]     - substring match on title/company/topic
- * @param {string} [filters.company]    - exact match
- * @param {string} [filters.topic]      - exact match
- * @param {string} [filters.difficulty] - exact match
- * @param {string} [filters.status]     - exact match
- * @returns {object[]} filtered questions array
- *
- * TODO: replace body with → return await db.find(filters);
+ * @returns {Promise<object[]>}
  */
-function getAll(filters = {}) {
-  let result = questions;
-
-  const { search, company, topic, difficulty, status } = filters;
-
-  if (company) {
-    result = result.filter(q => q.company === company);
-  }
-  if (topic) {
-    result = result.filter(q => q.topic === topic);
-  }
-  if (difficulty) {
-    result = result.filter(q => q.difficulty === difficulty);
-  }
-  if (status) {
-    result = result.filter(q => q.status === status);
-  }
-  if (search) {
-    const term = search.toLowerCase();
-    result = result.filter(q =>
-      q.title.toLowerCase().includes(term)   ||
-      q.company.toLowerCase().includes(term) ||
-      q.topic.toLowerCase().includes(term)
-    );
-  }
-
-  return result;
+async function getAll(filters = {}) {
+  return Question.find(buildFilter(filters)).sort({ createdAt: -1 });
 }
 
 
 /**
- * getById — Return a single question by numeric ID.
+ * getById — Return a single question by its MongoDB ObjectId string.
  *
- * @param {number} id
- * @returns {object|null} question or null if not found
- *
- * TODO: replace body with → return await db.findById(id);
+ * @param {string} id  - 24-char hex ObjectId string
+ * @returns {Promise<object|null>}
  */
-function getById(id) {
-  return questions.find(q => q.id === id) ?? null;  // TODO: DB call
+async function getById(id) {
+  if (!mongoose.isValidObjectId(id)) return null;
+  return Question.findById(id);
 }
 
 
 /**
- * create — Add a new question and return it.
+ * create — Insert a new question document and return it.
  *
  * @param {object} data - validated question fields
- * @returns {object} the newly created question
- *
- * TODO: replace body with → return await db.create(data);
+ * @returns {Promise<object>} the newly created document
  */
-function create(data) {
-  // TODO: DB call
-  const question = {
-    id:         Date.now(),   // unique numeric timestamp
+async function create(data) {
+  const question = new Question({
     company:    data.company,
     topic:      data.topic,
     title:      data.title,
     link:       data.link || '',
     difficulty: data.difficulty,
     status:     data.status,
-  };
-
-  questions.push(question);
-  return question;
-}
-
-
-/**
- * update — Update an existing question's fields.
- *
- * @param {number} id
- * @param {object} data - validated updated fields
- * @returns {object|null} updated question, or null if not found
- *
- * TODO: replace body with → return await db.findByIdAndUpdate(id, data, { new: true });
- */
-function update(id, data) {
-  // TODO: DB call
-  const index = questions.findIndex(q => q.id === id);
-  if (index === -1) return null;
-
-  // Merge — keep existing fields, overwrite only what was sent
-  questions[index] = {
-    ...questions[index],
-    company:    data.company,
-    topic:      data.topic,
-    title:      data.title,
-    link:       data.link ?? questions[index].link,
-    difficulty: data.difficulty,
-    status:     data.status,
-  };
-
-  return questions[index];
-}
-
-
-/**
- * remove — Delete a question by ID.
- *
- * @param {number} id
- * @returns {boolean} true if deleted, false if not found
- *
- * TODO: replace body with → const res = await db.findByIdAndDelete(id); return !!res;
- */
-function remove(id) {
-  // TODO: DB call
-  const before = questions.length;
-  questions = questions.filter(q => q.id !== id);
-  return questions.length < before;
-}
-
-
-/**
- * isDuplicate — Check if a question with same company+title already exists.
- * Used by the controller to enforce uniqueness.
- *
- * @param {string} company
- * @param {string} title
- * @param {number|null} excludeId - skip this id (used during edits)
- * @returns {boolean}
- */
-function isDuplicate(company, title, excludeId = null) {
-  return questions.some(q => {
-    if (q.id === excludeId) return false;
-    return (
-      q.company.toLowerCase() === company.toLowerCase() &&
-      q.title.toLowerCase()   === title.toLowerCase()
-    );
   });
+  return question.save();
+}
+
+
+/**
+ * update — Update an existing question by ObjectId.
+ * Returns the updated document, or null if not found.
+ *
+ * @param {string} id
+ * @param {object} data - validated updated fields
+ * @returns {Promise<object|null>}
+ */
+async function update(id, data) {
+  if (!mongoose.isValidObjectId(id)) return null;
+
+  return Question.findByIdAndUpdate(
+    id,
+    {
+      company:    data.company,
+      topic:      data.topic,
+      title:      data.title,
+      link:       data.link ?? '',
+      difficulty: data.difficulty,
+      status:     data.status,
+    },
+    { new: true, runValidators: true }  // return updated doc; enforce schema rules
+  );
+}
+
+
+/**
+ * remove — Delete a question by ObjectId.
+ * Returns true if a document was deleted, false if not found.
+ *
+ * @param {string} id
+ * @returns {Promise<boolean>}
+ */
+async function remove(id) {
+  if (!mongoose.isValidObjectId(id)) return false;
+  const deleted = await Question.findByIdAndDelete(id);
+  return deleted !== null;
+}
+
+
+/**
+ * isDuplicate — Check if company + title already exists.
+ * Pass excludeId (string) to skip the document currently being edited.
+ *
+ * @param {string}      company
+ * @param {string}      title
+ * @param {string|null} excludeId
+ * @returns {Promise<boolean>}
+ */
+async function isDuplicate(company, title, excludeId = null) {
+  const query = {
+    company: { $regex: new RegExp(`^${company}$`, 'i') },
+    title:   { $regex: new RegExp(`^${title}$`,   'i') },
+  };
+
+  if (excludeId && mongoose.isValidObjectId(excludeId)) {
+    query._id = { $ne: excludeId };
+  }
+
+  return !!(await Question.exists(query));
 }
 
 

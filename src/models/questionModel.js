@@ -22,10 +22,11 @@ const mongoose = require('mongoose');
 const { Schema } = mongoose;
 
 /* ── Allowed enum values — mirrors validateQuestion middleware ── */
-const VALID_COMPANIES    = ['Amazon', 'Google', 'Microsoft', 'Adobe', 'Flipkart', 'Walmart', 'Other'];
-const VALID_TOPICS       = ['Arrays', 'Strings', 'Linked List', 'Stack', 'Queue', 'Binary Search', 'Trees', 'Graphs', 'DP', 'Greedy', 'Backtracking', 'Heap', 'Other'];
+const VALID_COMPANIES    = ['Amazon', 'Google', 'Microsoft', 'Adobe', 'Flipkart', 'Walmart', 'Other', 'N/A'];
+const VALID_TOPICS       = ['Arrays', 'Strings', 'Linked List', 'Stack', 'Queue', 'Binary Search', 'Trees', 'Graphs', 'DP', 'Greedy', 'Backtracking', 'Heap', 'DBMS', 'OS', 'CN', 'OOPS', 'JavaScript', 'NodeJS', 'React', 'MongoDB', 'MySQL', 'Other'];
 const VALID_DIFFICULTIES = ['Easy', 'Medium', 'Hard'];
 const VALID_STATUSES     = ['Solved', 'Unsolved'];
+const VALID_CATEGORIES   = ['DSA', 'Core', 'Development'];
 
 
 /* ── Mongoose Schema ─────────────────────────────────────────
@@ -34,6 +35,11 @@ const VALID_STATUSES     = ['Solved', 'Unsolved'];
    ──────────────────────────────────────────────────────────── */
 const questionSchema = new Schema(
   {
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: [true, 'User ID is required.'],
+    },
     company: {
       type:     String,
       required: [true, 'Company is required.'],
@@ -70,6 +76,31 @@ const questionSchema = new Schema(
       default:  'Unsolved',
       trim:     true,
     },
+    category: {
+      type:     String,
+      enum:     { values: VALID_CATEGORIES, message: 'Invalid category: {VALUE}.' },
+      default:  'DSA',
+      trim:     true,
+    },
+    starred: {
+      type:     Boolean,
+      default:  false,
+    },
+    notes: {
+      type:     String,
+      default:  '',
+      trim:     true,
+    },
+    chapter: {
+      type:     String,
+      default:  '',
+      trim:     true,
+    },
+    content: {
+      type:     String,
+      default:  '',
+      trim:     true,
+    }
   },
   {
     timestamps: true,   // adds createdAt and updatedAt automatically
@@ -80,7 +111,7 @@ const questionSchema = new Schema(
 );
 
 /* ── Compound index — speeds up isDuplicate lookups ─────────── */
-questionSchema.index({ company: 1, title: 1 });
+questionSchema.index({ userId: 1, company: 1, title: 1 });
 
 /* ── Mongoose Model ──────────────────────────────────────────
    'Question' → collection name becomes 'questions' in MongoDB.
@@ -89,13 +120,18 @@ const Question = mongoose.model('Question', questionSchema);
 
 
 /* ── Helper: build a MongoDB query object from filter params ─ */
-function buildFilter(filters = {}) {
-  const query = {};
+function buildFilter(userId, filters = {}) {
+  const query = { userId };
 
   if (filters.company)    query.company    = filters.company;
   if (filters.topic)      query.topic      = filters.topic;
   if (filters.difficulty) query.difficulty = filters.difficulty;
   if (filters.status)     query.status     = filters.status;
+  if (filters.category)   query.category   = filters.category;
+  if (filters.chapter)    query.chapter    = filters.chapter;
+  if (filters.starred !== undefined && filters.starred !== '') {
+    query.starred = filters.starred === 'true' || filters.starred === true;
+  }
 
   if (filters.search) {
     const regex = new RegExp(filters.search, 'i');  // case-insensitive substring
@@ -121,8 +157,13 @@ function buildFilter(filters = {}) {
  * @param {object} filters
  * @returns {Promise<object[]>}
  */
-async function getAll(filters = {}) {
-  return Question.find(buildFilter(filters)).sort({ createdAt: -1 });
+async function getAll(userId, filters = {}) {
+  const query = buildFilter(userId, filters);
+  // Sort DSA and Revision by newest first. Sort Core/Dev logically (by insertion order).
+  if (filters.category === 'Core' || filters.category === 'Development') {
+    return Question.find(query).sort({ _id: 1 });
+  }
+  return Question.find(query).sort({ createdAt: -1 });
 }
 
 
@@ -132,9 +173,9 @@ async function getAll(filters = {}) {
  * @param {string} id  - 24-char hex ObjectId string
  * @returns {Promise<object|null>}
  */
-async function getById(id) {
+async function getById(userId, id) {
   if (!mongoose.isValidObjectId(id)) return null;
-  return Question.findById(id);
+  return Question.findOne({ _id: id, userId });
 }
 
 
@@ -144,14 +185,20 @@ async function getById(id) {
  * @param {object} data - validated question fields
  * @returns {Promise<object>} the newly created document
  */
-async function create(data) {
+async function create(userId, data) {
   const question = new Question({
+    userId,
     company:    data.company,
     topic:      data.topic,
     title:      data.title,
     link:       data.link || '',
     difficulty: data.difficulty,
     status:     data.status,
+    category:   data.category || 'DSA',
+    starred:    data.starred || false,
+    notes:      data.notes || '',
+    chapter:    data.chapter || '',
+    content:    data.content || '',
   });
   return question.save();
 }
@@ -165,11 +212,11 @@ async function create(data) {
  * @param {object} data - validated updated fields
  * @returns {Promise<object|null>}
  */
-async function update(id, data) {
+async function update(userId, id, data) {
   if (!mongoose.isValidObjectId(id)) return null;
 
-  return Question.findByIdAndUpdate(
-    id,
+  return Question.findOneAndUpdate(
+    { _id: id, userId },
     {
       company:    data.company,
       topic:      data.topic,
@@ -177,6 +224,11 @@ async function update(id, data) {
       link:       data.link ?? '',
       difficulty: data.difficulty,
       status:     data.status,
+      category:   data.category ?? 'DSA',
+      starred:    data.starred ?? false,
+      notes:      data.notes ?? '',
+      chapter:    data.chapter ?? '',
+      content:    data.content ?? '',
     },
     { new: true, runValidators: true }  // return updated doc; enforce schema rules
   );
@@ -190,9 +242,9 @@ async function update(id, data) {
  * @param {string} id
  * @returns {Promise<boolean>}
  */
-async function remove(id) {
+async function remove(userId, id) {
   if (!mongoose.isValidObjectId(id)) return false;
-  const deleted = await Question.findByIdAndDelete(id);
+  const deleted = await Question.findOneAndDelete({ _id: id, userId });
   return deleted !== null;
 }
 
@@ -206,8 +258,9 @@ async function remove(id) {
  * @param {string|null} excludeId
  * @returns {Promise<boolean>}
  */
-async function isDuplicate(company, title, excludeId = null) {
+async function isDuplicate(userId, company, title, excludeId = null) {
   const query = {
+    userId,
     company: { $regex: new RegExp(`^${company}$`, 'i') },
     title:   { $regex: new RegExp(`^${title}$`,   'i') },
   };

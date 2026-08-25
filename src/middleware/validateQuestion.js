@@ -9,10 +9,11 @@
 'use strict';
 
 /* Allowed values for enum fields */
-const VALID_COMPANIES   = ['Amazon', 'Google', 'Microsoft', 'Adobe', 'Flipkart', 'Walmart', 'Other'];
-const VALID_TOPICS      = ['Arrays', 'Strings', 'Linked List', 'Stack', 'Queue', 'Binary Search', 'Trees', 'Graphs', 'DP', 'Greedy', 'Backtracking', 'Heap', 'Other'];
+const VALID_COMPANIES   = ['Amazon', 'Google', 'Microsoft', 'Adobe', 'Flipkart', 'Walmart', 'Other', 'N/A'];
+const VALID_TOPICS      = ['Arrays', 'Strings', 'Linked List', 'Stack', 'Queue', 'Binary Search', 'Trees', 'Graphs', 'DP', 'Greedy', 'Backtracking', 'Heap', 'DBMS', 'OS', 'CN', 'OOPS', 'JavaScript', 'NodeJS', 'React', 'MongoDB', 'MySQL', 'Other'];
 const VALID_DIFFICULTIES = ['Easy', 'Medium', 'Hard'];
 const VALID_STATUSES    = ['Solved', 'Unsolved'];
+const VALID_CATEGORIES  = ['DSA', 'Core', 'Development'];
 
 /**
  * URL format check — very permissive, just ensures the string
@@ -21,7 +22,7 @@ const VALID_STATUSES    = ['Solved', 'Unsolved'];
 function isValidUrl(str) {
   try {
     const url = new URL(str);
-    return url.protocol === 'http:' || url.protocol === 'https:';
+    return url.protocol === 'http:' || url.protocol === 'https:' || url.protocol === 'file:';
   } catch {
     return false;
   }
@@ -32,7 +33,7 @@ function isValidUrl(str) {
  * Attached to POST /api/questions and PUT /api/questions/:id
  */
 function validateQuestion(req, res, next) {
-  const { company, topic, title, link, difficulty, status } = req.body;
+  const { company, topic, title, link, difficulty, status, category, starred, notes } = req.body;
   const errors = {};
 
   /* ── Required field checks ──────────────────────────────── */
@@ -71,6 +72,10 @@ function validateQuestion(req, res, next) {
     errors.link = 'Link must be a valid URL (http:// or https://).';
   }
 
+  if (category && typeof category === 'string' && !VALID_CATEGORIES.includes(category.trim())) {
+    errors.category = `Category must be one of: ${VALID_CATEGORIES.join(', ')}.`;
+  }
+
   /* ── If any errors, return 400 ──────────────────────────── */
   if (Object.keys(errors).length > 0) {
     return res.status(400).json({
@@ -86,6 +91,13 @@ function validateQuestion(req, res, next) {
   req.body.link       = (link || '').trim();
   req.body.difficulty = difficulty.trim();
   req.body.status     = status.trim();
+  if (category && typeof category === 'string') req.body.category = category.trim();
+  if (starred !== undefined) req.body.starred = Boolean(starred);
+  if (notes !== undefined && typeof notes === 'string') req.body.notes = notes.trim();
+  
+  const { chapter, content } = req.body;
+  if (chapter !== undefined && typeof chapter === 'string') req.body.chapter = chapter.trim();
+  if (content !== undefined && typeof content === 'string') req.body.content = content.trim();
 
   next();
 }

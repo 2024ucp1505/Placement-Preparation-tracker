@@ -14,6 +14,9 @@
       referrerpolicy="no-referrer"
     />
 
+    <!-- Marked.js for Markdown parsing -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
     <!-- External Stylesheet -->
     <link rel="stylesheet" href="style.css" />
   </head>
@@ -27,7 +30,15 @@
           <i class="fa-solid fa-code header-icon"></i>
           <h1 class="header-title">Placement Preparation Tracker</h1>
         </div>
-        <p class="header-subtitle">Track, solve, and conquer your placement goals</p>
+        <div class="header-user-section" style="display: flex; align-items: center; gap: 15px;">
+          <div id="user-profile" style="display: flex; align-items: center; gap: 10px; color: var(--text);">
+            <img id="user-avatar" src="" alt="Avatar" style="width: 32px; height: 32px; border-radius: 50%; display: none;" />
+            <span id="user-name" style="font-weight: 600;">Loading...</span>
+          </div>
+          <button class="btn btn--secondary" onclick="window.location.href='/api/auth/logout'" style="padding: 0.4rem 0.8rem; font-size: 0.9rem;">
+            Logout
+          </button>
+        </div>
       </div>
     </header>
 
@@ -252,6 +263,14 @@
           Question List
         </h2>
 
+        <!-- Category Tabs -->
+        <div class="category-tabs" aria-label="Question Categories">
+          <button class="tab-btn active" data-category="DSA">DSA</button>
+          <button class="tab-btn" data-category="Core">Core</button>
+          <button class="tab-btn" data-category="Development">Development</button>
+          <button class="tab-btn" data-category="Revision">Revision <i class="fa-solid fa-star" style="color:var(--warning); margin-left: 5px;"></i></button>
+        </div>
+
         <!-- Filters & Search -->
         <div class="filters-bar">
 
@@ -311,43 +330,28 @@
 
         <!-- Questions Table -->
         <div class="table-wrap">
-          <table class="questions-table" aria-label="Questions table">
+          <table class="questions-table" aria-label="List of questions">
             <thead>
               <tr>
-                <th scope="col">
-                  <i class="fa-solid fa-building"></i>
-                  Company
-                </th>
-                <th scope="col">
-                  <i class="fa-solid fa-tags"></i>
-                  Topic
-                </th>
-                <th scope="col">
-                  <i class="fa-solid fa-file-lines"></i>
-                  Question
-                </th>
-                <th scope="col">
-                  <i class="fa-solid fa-signal"></i>
-                  Difficulty
-                </th>
-                <th scope="col">
-                  <i class="fa-solid fa-toggle-on"></i>
-                  Status
-                </th>
-                <th scope="col">
-                  <i class="fa-solid fa-link"></i>
-                  Link
-                </th>
-                <th scope="col">
-                  <i class="fa-solid fa-sliders"></i>
-                  Actions
-                </th>
+                <th scope="col"><i class="fa-solid fa-building"></i> Company</th>
+                <th scope="col"><i class="fa-solid fa-tag"></i> Topic</th>
+                <th scope="col"><i class="fa-solid fa-heading"></i> Question Title</th>
+                <th scope="col"><i class="fa-solid fa-layer-group"></i> Difficulty</th>
+                <th scope="col"><i class="fa-solid fa-bars-progress"></i> Status</th>
+                <th scope="col"><i class="fa-solid fa-link"></i> Link</th>
+                <th scope="col" style="text-align: center;"><i class="fa-solid fa-star"></i></th>
+                <th scope="col"><i class="fa-solid fa-gear"></i> Actions</th>
               </tr>
             </thead>
             <tbody id="questions-table-body">
-              <!-- Rows will be injected by script.js -->
+              <!-- Rows injected via JS -->
             </tbody>
           </table>
+
+          <!-- Nested Explorer View (Core/Dev) -->
+          <div id="accordion-view" style="display: none;">
+            <!-- Accordion content injected via JS -->
+          </div>
 
           <!-- Empty State -->
           <div id="empty-state" class="empty-state" aria-live="polite">
@@ -370,8 +374,25 @@
       </p>
     </footer>
 
+
+    <!-- Notes Modal -->
+    <div id="notes-modal" class="modal-overlay" aria-hidden="true">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 class="modal-title">Notes</h3>
+          <button id="close-notes-modal" class="btn-close" aria-label="Close modal"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="modal-body">
+          <textarea id="notes-textarea" class="form-control" rows="8" placeholder="Type your notes here..."></textarea>
+          <input type="hidden" id="notes-question-id" />
+        </div>
+        <div class="modal-footer">
+          <button id="save-notes-btn" class="btn btn--primary">Save Notes</button>
+        </div>
+      </div>
+    </div>
+
     <!-- External Script -->
     <script src="script.js"></script>
-
   </body>
 </html>

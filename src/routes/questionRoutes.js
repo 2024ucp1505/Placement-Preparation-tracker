@@ -11,7 +11,11 @@ const router     = express.Router();
 const controller = require('../controllers/questionController');
 const validate   = require('../middleware/validateQuestion');
 
+const requireAuth = require('../middleware/requireAuth');
+
 /* ── READ ───────────────────────────────────────────────────── */
+router.use(requireAuth);
+
 router.get('/',    controller.getAllQuestions);    // GET  /api/questions
 router.get('/:id', controller.getQuestionById);   // GET  /api/questions/:id
 

@@ -31,9 +31,12 @@ async function getAllQuestions(req, res, next) {
       topic:      req.query.topic      || '',
       difficulty: req.query.difficulty || '',
       status:     req.query.status     || '',
+      category:   req.query.category   || '',
+      starred:    req.query.starred    || '',
     };
 
-    const questions = await model.getAll(filters);
+    const userId = req.user._id;
+    const questions = await model.getAll(userId, filters);
     res.status(200).json(questions);
   } catch (err) {
     next(err);
@@ -47,12 +50,13 @@ async function getAllQuestions(req, res, next) {
 async function getQuestionById(req, res, next) {
   try {
     const { id } = req.params;
+    const userId = req.user._id;
 
     if (!mongoose.isValidObjectId(id)) {
       return res.status(400).json({ error: 'Invalid ID format.' });
     }
 
-    const question = await model.getById(id);
+    const question = await model.getById(userId, id);
 
     if (!question) {
       return res.status(404).json({ error: `Question with id ${id} not found.` });
@@ -71,16 +75,17 @@ async function getQuestionById(req, res, next) {
    ──────────────────────────────────────────────────────────── */
 async function createQuestion(req, res, next) {
   try {
-    const { company, topic, title, link, difficulty, status } = req.body;
+    const { company, topic, title, link, difficulty, status, category, starred, notes, chapter, content } = req.body;
+    const userId = req.user._id;
 
     // Business rule: no duplicate company + title combinations
-    if (await model.isDuplicate(company, title, null)) {
+    if (await model.isDuplicate(userId, company, title, null)) {
       return res.status(409).json({
         error: `A question titled "${title}" for ${company} already exists.`,
       });
     }
 
-    const newQuestion = await model.create({ company, topic, title, link, difficulty, status });
+    const newQuestion = await model.create(userId, { company, topic, title, link, difficulty, status, category, starred, notes, chapter, content });
 
     console.log(`✅ Created question [${newQuestion._id}]: "${newQuestion.title}" — ${newQuestion.company}`);
     res.status(201).json(newQuestion);
@@ -97,21 +102,22 @@ async function createQuestion(req, res, next) {
 async function updateQuestion(req, res, next) {
   try {
     const { id } = req.params;
+    const userId = req.user._id;
 
     if (!mongoose.isValidObjectId(id)) {
       return res.status(400).json({ error: 'Invalid ID format.' });
     }
 
-    const { company, topic, title, link, difficulty, status } = req.body;
+    const { company, topic, title, link, difficulty, status, category, starred, notes, chapter, content } = req.body;
 
     // Duplicate check — exclude the question being updated
-    if (await model.isDuplicate(company, title, id)) {
+    if (await model.isDuplicate(userId, company, title, id)) {
       return res.status(409).json({
         error: `Another question titled "${title}" for ${company} already exists.`,
       });
     }
 
-    const updated = await model.update(id, { company, topic, title, link, difficulty, status });
+    const updated = await model.update(userId, id, { company, topic, title, link, difficulty, status, category, starred, notes, chapter, content });
 
     if (!updated) {
       return res.status(404).json({ error: `Question with id ${id} not found.` });
@@ -132,12 +138,13 @@ async function updateQuestion(req, res, next) {
 async function deleteQuestion(req, res, next) {
   try {
     const { id } = req.params;
+    const userId = req.user._id;
 
     if (!mongoose.isValidObjectId(id)) {
       return res.status(400).json({ error: 'Invalid ID format.' });
     }
 
-    const deleted = await model.remove(id);
+    const deleted = await model.remove(userId, id);
 
     if (!deleted) {
       return res.status(404).json({ error: `Question with id ${id} not found.` });

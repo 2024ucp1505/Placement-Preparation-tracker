@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>7-Day Full Stack Interview Prep</title>
+  <style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font-sans); }
+  .plan { padding: 1rem 0; }
+  .header { margin-bottom: 1.5rem; }
+  .header h2 { font-size: 18px; font-weight: 500; color: var(--color-text-primary); }
+  .header p { font-size: 13px; color: var(--color-text-secondary); margin-top: 4px; }
+  .tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 1.25rem; }
+  .tab { padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 500; cursor: pointer; border: 0.5px solid var(--color-border-secondary); background: var(--color-background-primary); color: var(--color-text-secondary); transition: all 0.15s; }
+  .tab:hover { background: var(--color-background-secondary); }
+  .tab.active { background: #EEEDFE; color: #3C3489; border-color: #AFA9EC; }
+  .day-card { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); overflow: hidden; }
+  .day-header { padding: 14px 16px; border-bottom: 0.5px solid var(--color-border-tertiary); display: flex; align-items: center; gap: 12px; }
+  .day-badge { font-size: 12px; font-weight: 500; padding: 4px 10px; border-radius: 20px; white-space: nowrap; }
+  .day-title { font-size: 15px; font-weight: 500; color: var(--color-text-primary); }
+  .day-sub { font-size: 12px; color: var(--color-text-secondary); margin-top: 2px; }
+  .sections { padding: 0; }
+  .section { border-bottom: 0.5px solid var(--color-border-tertiary); padding: 12px 16px; }
+  .section:last-child { border-bottom: none; }
+  .section-title { font-size: 12px; font-weight: 500; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+  .topics { display: flex; flex-wrap: wrap; gap: 6px; }
+  .topic { font-size: 12px; padding: 3px 10px; border-radius: 20px; border: 0.5px solid var(--color-border-tertiary); color: var(--color-text-primary); background: var(--color-background-secondary); cursor: pointer; transition: all 0.12s; }
+  .topic:hover { border-color: var(--color-border-primary); }
+  .topic.done { background: #EAF3DE; color: #27500A; border-color: #97C459; text-decoration: line-through; opacity: 0.7; }
+  .build-box { background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 10px 12px; margin-top: 2px; }
+  .build-box p { font-size: 13px; color: var(--color-text-primary); line-height: 1.5; }
+  .build-label { font-size: 11px; font-weight: 500; color: #185FA5; margin-bottom: 4px; }
+  .progress-bar-wrap { height: 4px; background: var(--color-background-secondary); border-radius: 4px; margin-top: 6px; overflow: hidden; }
+  .progress-bar { height: 100%; border-radius: 4px; transition: width 0.3s; }
+  .progress-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 3px; }
+  .progress-label { font-size: 11px; color: var(--color-text-secondary); }
+  .hidden { display: none; }
+  .nav-hint { font-size: 12px; color: var(--color-text-tertiary); margin-bottom: 10px; }
+  .question-list { list-style: none; padding: 0; }
+  .question-list li { font-size: 13px; color: var(--color-text-primary); padding: 5px 0; border-bottom: 0.5px solid var(--color-border-tertiary); line-height: 1.5; display: flex; align-items: flex-start; gap: 8px; cursor: pointer; }
+  .question-list li:last-child { border-bottom: none; }
+  .question-list li .q-check { width: 14px; height: 14px; border: 0.5px solid var(--color-border-secondary); border-radius: 3px; flex-shrink: 0; margin-top: 2px; display: flex; align-items: center; justify-content: center; }
+  .question-list li.qdone .q-check { background: #1D9E75; border-color: #1D9E75; }
+  .question-list li.qdone span { text-decoration: line-through; color: var(--color-text-secondary); }
+  .ask-btn { font-size: 12px; padding: 4px 12px; border-radius: 20px; border: 0.5px solid #B5D4F4; background: #E6F1FB; color: #185FA5; cursor: pointer; margin-top: 8px; }
+  .ask-btn:hover { background: #B5D4F4; }
+  </style>
+</head>
+<body>
+
+<div class="plan">
+  <h2 class="sr-only">7-day full stack interview preparation plan covering JS, Node, Express, React, MongoDB, SQL, and project stories</h2>
+
+  <div class="tabs" id="tabs"></div>
+  <div id="dayContent"></div>
+</div>
+
+<script>
+const days = [
+  {
+    num: 1,
+    label: "Day 1",
+    title: "JavaScript — the full picture",
+    sub: "Theory AM · Build PM",
+    color: "#EEEDFE", textColor: "#3C3489", barColor: "#7F77DD",
+    sections: [
+      {
+        title: "Core theory",
+        icon: "📖",
+        topics: ["var vs let vs const", "hoisting", "temporal dead zone", "scope chain", "closures", "IIFE", "this keyword", "call/apply/bind", "arrow fn vs regular", "prototype chain", "OOP in JS", "classes & inheritance", "event loop", "call stack", "microtask vs macrotask", "promises", "async/await", "error handling", "try/catch/finally", "promise.all vs race vs allSettled vs any"]
+      },
+      {
+        title: "Must-know diffs",
+        icon: "⚡",
+        topics: ["==/===", "null vs undefined", "deep vs shallow copy", "spread vs rest", "map vs forEach vs filter vs reduce", "for..in vs for..of", "synchronous vs asynchronous", "callbacks vs promises vs async/await", "localStorage vs sessionStorage vs cookies", "debounce vs throttle"]
+      },
+      {
+        title: "Advanced / tricky",
+        icon: "🔥",
+        topics: ["currying", "memoization", "generator functions", "iterators", "WeakMap/WeakSet", "Symbol", "Proxy/Reflect", "garbage collection", "memory leaks", "event delegation", "optional chaining ?.","nullish coalescing ??","tagged template literals","module system (CJS vs ESM)"]
+      },
+      {
+        title: "Build",
+        build: true,
+        content: "Todo list with local storage — pure HTML+CSS+JS, no frameworks. Implement add/delete/filter/persist. Shows DOM manipulation, event handling, async patterns all at once."
+      }
+    ],
+    questions: [
+      "Explain the event loop with a code trace",
+      "What is a closure? Give a real use case",
+      "Difference between null and undefined",
+      "How does prototypal inheritance work?",
+      "What does 'this' refer to in an arrow function?",
+      "Explain Promise.all vs Promise.allSettled",
+      "What is debouncing? Implement it",
+      "Difference between == and ===",
+      "What is hoisting? Does let get hoisted?",
+      "Explain call, apply, bind with examples"
+    ]
+  },
+  {
+    num: 2,
+    label: "Day 2",
+    title: "Node.js + Express — backend foundation",
+    sub: "Theory AM · Build PM",
+    color: "#E1F5EE", textColor: "#085041", barColor: "#1D9E75",
+    sections: [
+      {
+        title: "Node.js core",
+        icon: "📖",
+        topics: ["how node works (single thread)", "V8 + libuv", "event loop in node (6 phases)", "non-blocking I/O", "streams & buffers", "CommonJS vs ESM in node", "process object", "global vs window", "child_process", "cluster module", "worker threads", "npm vs npx", "package.json", "node_modules", "__dirname/__filename", "fs/path/os/http modules"]
+      },
+      {
+        title: "Express core",
+        icon: "⚡",
+        topics: ["middleware chain", "app.use vs app.get", "request lifecycle", "req.params vs req.query vs req.body", "error handling middleware (4 args)", "router module", "CORS", "helmet", "rate limiting", "express-validator", "multer (file upload)", "serving static files", "template engines"]
+      },
+      {
+        title: "Must-know concepts",
+        icon: "🔥",
+        topics: ["REST principles", "HTTP methods + status codes", "stateless vs stateful", "JWT auth", "session vs token auth", "OAuth basics", "env variables (.env)", "MVC pattern", "SOLID principles", "API versioning", "pagination strategies", "compression", "caching headers"]
+      },
+      {
+        title: "Build",
+        build: true,
+        content: "REST API for a blog — CRUD endpoints, JWT auth middleware, error handling middleware, validation, proper status codes. No DB needed yet (use an in-memory array). Tests: Postman/Thunder."
+      }
+    ],
+    questions: [
+      "How is Node.js single-threaded but non-blocking?",
+      "Explain the 6 phases of Node's event loop",
+      "What is middleware? How does the chain work?",
+      "Difference between req.params, req.query, req.body",
+      "How do you handle errors in Express?",
+      "What is JWT? How does refresh token work?",
+      "Session vs token-based authentication",
+      "What are streams? When would you use them?",
+      "How would you handle file uploads?",
+      "What is CORS and how do you configure it?"
+    ]
+  },
+  {
+    num: 3,
+    label: "Day 3",
+    title: "React — UI that makes sense",
+    sub: "Theory AM · Build PM",
+    color: "#E6F1FB", textColor: "#0C447C", barColor: "#378ADD",
+    sections: [
+      {
+        title: "Core concepts",
+        icon: "📖",
+        topics: ["virtual DOM", "reconciliation & diffing", "React fiber", "JSX", "functional vs class components", "props vs state", "one-way data flow", "controlled vs uncontrolled components", "keys in lists", "lifting state up", "composition vs inheritance"]
+      },
+      {
+        title: "Hooks deep dive",
+        icon: "⚡",
+        topics: ["useState", "useEffect (deps array)", "useRef", "useContext", "useReducer", "useMemo", "useCallback", "custom hooks", "hook rules", "useLayoutEffect vs useEffect", "useId", "useTransition", "useDeferredValue"]
+      },
+      {
+        title: "Patterns & ecosystem",
+        icon: "🔥",
+        topics: ["Context API vs Redux", "React Query / SWR", "code splitting / lazy", "React.memo", "Suspense", "error boundaries", "portals", "forwardRef", "render props", "HOC pattern", "React Router v6", "accessibility basics", "testing (RTL basics)"]
+      },
+      {
+        title: "Build",
+        build: true,
+        content: "GitHub user search app — search input with debounce, API fetch with loading/error states, results list, user detail view with React Router. Shows hooks, state management, API integration."
+      }
+    ],
+    questions: [
+      "What is the virtual DOM and how does reconciliation work?",
+      "Explain useEffect with all 3 dependency array cases",
+      "useMemo vs useCallback — when to use each?",
+      "What are controlled components?",
+      "How does Context API work? When would you use Redux instead?",
+      "What is a custom hook? Give an example",
+      "How do you prevent unnecessary re-renders?",
+      "What are keys in lists and why do they matter?",
+      "Explain React Fiber",
+      "Difference between useEffect and useLayoutEffect"
+    ]
+  },
+  {
+    num: 4,
+    label: "Day 4",
+    title: "MongoDB + MySQL — data layer",
+    sub: "Theory AM · Build PM",
+    color: "#FAEEDA", textColor: "#633806", barColor: "#BA7517",
+    sections: [
+      {
+        title: "MongoDB",
+        icon: "📖",
+        topics: ["document model", "collections vs tables", "BSON", "CRUD operations", "aggregation pipeline ($match $group $project $lookup)", "indexes (single, compound, text, geo)", "schema design (embed vs ref)", "Mongoose ODM", "Mongoose schema + validation", "populate", "transactions in Mongo", "replica sets", "sharding basics", "Atlas"]
+      },
+      {
+        title: "MySQL / SQL",
+        icon: "⚡",
+        topics: ["SELECT/INSERT/UPDATE/DELETE", "WHERE/GROUP BY/HAVING/ORDER BY", "JOINS (inner/left/right/full)", "subqueries", "UNION", "indexes", "PRIMARY/FOREIGN KEY", "constraints (NOT NULL, UNIQUE, DEFAULT, CHECK)", "normalization (1NF-3NF)", "ACID properties", "transactions (COMMIT/ROLLBACK)", "stored procedures", "views", "explain query plan"]
+      },
+      {
+        title: "Key diffs & when to use what",
+        icon: "🔥",
+        topics: ["SQL vs NoSQL", "ACID vs BASE", "horizontal vs vertical scaling", "when MongoDB > SQL", "when SQL > MongoDB", "ORMs (Sequelize/Prisma)", "N+1 problem", "connection pooling", "query optimization", "denormalization trade-offs", "CAP theorem"]
+      },
+      {
+        title: "Build",
+        build: true,
+        content: "Connect Day 2's blog API to MongoDB with Mongoose. Add user collection with auth. Bonus: replicate the schema in MySQL and write equivalent queries — shows you know both."
+      }
+    ],
+    questions: [
+      "When would you choose MongoDB over MySQL?",
+      "Explain the aggregation pipeline",
+      "What are MongoDB indexes and how do they work?",
+      "Embed vs reference — how do you decide?",
+      "Explain JOINS with examples",
+      "What is normalization? Why denormalize?",
+      "Explain ACID properties",
+      "What is the N+1 problem? How do you fix it?",
+      "What is a transaction? How does it work in Mongo?",
+      "Explain CAP theorem"
+    ]
+  },
+  {
+    num: 5,
+    label: "Day 5",
+    title: "Project 1 — deep dive",
+    sub: "Story · Tech choices · Counter questions",
+    color: "#FAECE7", textColor: "#4A1B0C", barColor: "#D85A30",
+    sections: [
+      {
+        title: "Story framework",
+        icon: "📖",
+        topics: ["1-min pitch (what, why, impact)", "problem it solves", "your specific role", "biggest technical challenge", "how you solved it", "what you'd do differently", "what you're proud of"]
+      },
+      {
+        title: "Tech choice questions",
+        icon: "⚡",
+        topics: ["why this DB?", "why this framework?", "why this auth method?", "why REST not GraphQL?", "why monolith not microservices?", "what was the bottleneck?", "how did you handle errors?", "how did you deploy?", "how did you test?"]
+      },
+      {
+        title: "Scalability counter questions",
+        icon: "🔥",
+        topics: ["what if 10x users?", "how would you add caching?", "how would you add queues?", "horizontal scaling strategy", "DB sharding/replication plan", "load balancer approach", "CDN for static assets", "rate limiting strategy", "monitoring & logging", "CI/CD pipeline"]
+      },
+      {
+        title: "Build",
+        build: true,
+        content: "Write out your STAR story for this project. Code-trace 3 key functions from memory. Be able to open the repo and explain any line."
+      }
+    ],
+    questions: [
+      "Walk me through this project",
+      "What was the hardest bug you fixed?",
+      "How would you scale this to 1 million users?",
+      "Why did you choose X over Y technology?",
+      "What would you do differently?",
+      "How did you handle authentication/security?",
+      "What's the biggest weakness of your current design?",
+      "How would you add real-time features?",
+      "How did you structure your codebase?",
+      "How did you handle edge cases?"
+    ]
+  },
+  {
+    num: 6,
+    label: "Day 6",
+    title: "Project 2 + 3 — stories & depth",
+    sub: "Story · Diffs · Behavioral",
+    color: "#FBEAF0", textColor: "#4B1528", barColor: "#D4537E",
+    sections: [
+      {
+        title: "Same framework — both projects",
+        icon: "📖",
+        topics: ["pitch each in 60 seconds", "unique challenge in each", "contrast between projects", "what you learned from project 2 that you applied in 3", "different tech choices — why?"]
+      },
+      {
+        title: "Behavioral around projects",
+        icon: "⚡",
+        topics: ["tight deadline story", "collaboration story", "debugging under pressure", "disagreement with approach", "learning something new fast", "failure and recovery", "ownership and initiative", "feedback you received"]
+      },
+      {
+        title: "Full stack depth questions",
+        icon: "🔥",
+        topics: ["end-to-end request lifecycle", "what happens when you type URL", "how auth flows across layers", "state management decisions", "API design decisions", "frontend ↔ backend contract", "performance bottlenecks found", "security considerations (XSS, CSRF, injection)"]
+      },
+      {
+        title: "Build",
+        build: true,
+        content: "Mock interview yourself — record 5 mins explaining each project out loud. Watch it back. Fix any 'uhh', 'like', or gaps in explanation. Brutal but works."
+      }
+    ],
+    questions: [
+      "Tell me about your most complex project",
+      "Describe a time you had to learn something quickly",
+      "How did you collaborate with others on this?",
+      "Tell me about a bug that took you days to fix",
+      "How do you handle a feature request that seems technically wrong?",
+      "Walk me through end-to-end how a request flows in your app",
+      "How did you ensure security in your app?",
+      "What's a technical decision you regret? Why?",
+      "How do you approach debugging a production issue?",
+      "What was your biggest learning from these projects?"
+    ]
+  },
+  {
+    num: 7,
+    label: "Day 7",
+    title: "Full review + mock grind",
+    sub: "Gaps · Mock · Confidence",
+    color: "#EAF3DE", textColor: "#173404", barColor: "#639922",
+    sections: [
+      {
+        title: "Revision sweep",
+        icon: "📖",
+        topics: ["revisit any weak topics from days 1-4", "re-read your project stories", "read over any notes you made", "redo 2-3 tricky problems from each day"]
+      },
+      {
+        title: "System design basics (often asked for mid-level)",
+        icon: "⚡",
+        topics: ["URL shortener design", "design a REST API for twitter", "caching strategies (LRU, Redis)", "CDN + load balancer", "message queues (basic)", "microservices basics", "API gateway", "rate limiting design", "websockets vs SSE vs polling", "database design from scratch"]
+      },
+      {
+        title: "Rapid fire — the ones everyone forgets",
+        icon: "🔥",
+        topics: ["HTTP vs HTTPS", "TCP vs UDP", "SSL/TLS handshake", "DNS lookup", "REST vs GraphQL vs tRPC", "monolith vs microservices", "Docker basics", "CI/CD basics", "environment variables security", "git rebase vs merge", "code review best practices"]
+      },
+      {
+        title: "Build",
+        build: true,
+        content: "Spend 2 hours on a timed challenge: build a full CRUD app from scratch with no looking things up. Then spend 2 hours doing mock interviews aloud — use 'Ask Claude' below."
+      }
+    ],
+    questions: [
+      "Design a URL shortener",
+      "How does HTTPS work?",
+      "Explain REST vs GraphQL",
+      "How would you implement rate limiting?",
+      "What is a microservice? When would you use one?",
+      "How does Redis caching work?",
+      "Explain Docker in simple terms",
+      "What is a message queue? Give a use case",
+      "How do you handle concurrent requests in Node?",
+      "Design a basic authentication system from scratch"
+    ]
+  }
+];
+
+let activeDay = 0;
+let doneTopics = {};
+let doneQuestions = {};
+
+function renderTabs() {
+  const container = document.getElementById('tabs');
+  container.innerHTML = days.map((d, i) => `
+    <button class="tab ${i === activeDay ? 'active' : ''}" onclick="switchDay(${i})" style="${i === activeDay ? `background:${d.color};color:${d.textColor};border-color:${d.barColor}88;` : ''}">${d.label}</button>
+  `).join('');
+}
+
+function topicsKey(di, si, topic) { return `d${di}_s${si}_${topic}`; }
+function questionKey(di, qi) { return `d${di}_q${qi}`; }
+
+function renderDay(di) {
+  const d = days[di];
+  const allTopics = d.sections.filter(s=>!s.build).flatMap(s=>s.topics);
+  const doneCount = allTopics.filter(t => doneTopics[topicsKey(di, d.sections.findIndex(s=>s.topics&&s.topics.includes(t)), t)]).length;
+  const pct = allTopics.length ? Math.round(doneCount / allTopics.length * 100) : 0;
+
+  let html = `
+    <div class="day-card">
+      <div class="day-header">
+        <span class="day-badge" style="background:${d.color};color:${d.textColor};">${d.label}</span>
+        <div>
+          <div class="day-title">${d.title}</div>
+          <div class="day-sub">${d.sub}</div>
+        </div>
+        <div style="margin-left:auto;min-width:80px;">
+          <div class="progress-row">
+            <span class="progress-label">topics</span>
+            <span class="progress-label" style="font-weight:500;color:var(--color-text-primary);">${pct}%</span>
+          </div>
+          <div class="progress-bar-wrap">
+            <div class="progress-bar" style="width:${pct}%;background:${d.barColor};"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sections">
+  `;
+
+  d.sections.forEach((sec, si) => {
+    if (sec.build) {
+      html += `<div class="section">
+        <div class="section-title"><i class="ti ti-hammer" aria-hidden="true"></i> build project</div>
+        <div class="build-box"><p>${sec.content}</p></div>
+      </div>`;
+    } else {
+      html += `<div class="section">
+        <div class="section-title"><i class="ti ti-${si===0?'book':'si===1'?'bolt':'flame'}" aria-hidden="true"></i>${sec.icon} ${sec.title} <span style="margin-left:auto;font-size:11px;font-weight:400;color:var(--color-text-tertiary);">tap to check off</span></div>
+        <div class="topics">
+          ${sec.topics.map(t => {
+            const k = topicsKey(di, si, t);
+            return `<span class="topic ${doneTopics[k]?'done':''}" onclick="toggleTopic('${k}',${di})">${t}</span>`;
+          }).join('')}
+        </div>
+      </div>`;
+    }
+  });
+
+  html += `
+      <div class="section">
+        <div class="section-title"><i class="ti ti-messages" aria-hidden="true"></i> interview questions</div>
+        <ul class="question-list">
+          ${d.questions.map((q, qi) => {
+            const k = questionKey(di, qi);
+            return `<li class="${doneQuestions[k]?'qdone':''}" onclick="toggleQ('${k}',${di})">
+              <div class="q-check">${doneQuestions[k]?'<i class="ti ti-check" style="font-size:10px;color:#fff;"></i>':''}</div>
+              <span>${q}</span>
+            </li>`;
+          }).join('')}
+        </ul>
+        <button class="ask-btn" onclick="askClaude(${di})">ask Claude a random question from this day ↗</button>
+      </div>
+    </div></div>
+  `;
+
+  document.getElementById('dayContent').innerHTML = html;
+}
+
+function switchDay(i) {
+  activeDay = i;
+  renderTabs();
+  renderDay(i);
+}
+
+function toggleTopic(k, di) {
+  doneTopics[k] = !doneTopics[k];
+  renderDay(di);
+  renderTabs();
+}
+
+function toggleQ(k, di) {
+  doneQuestions[k] = !doneQuestions[k];
+  renderDay(di);
+}
+
+function askClaude(di) {
+  const d = days[di];
+  const qs = d.questions;
+  const q = qs[Math.floor(Math.random() * qs.length)];
+  sendPrompt(`Interview question for ${d.label} (${d.title}): "${q}" — ask me this question and then evaluate my answer when I give it.`);
+}
+
+switchDay(0);
+</script>
+
+</body>
+</html>
